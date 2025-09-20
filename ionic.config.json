@@ -1,0 +1,7 @@
+{
+  "name": "VoiceTT",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
