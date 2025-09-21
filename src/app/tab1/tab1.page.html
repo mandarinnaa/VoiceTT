@@ -1,17 +1,94 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>
-      Tab 1
+      <ion-icon name="mic" class="ion-margin-end"></ion-icon>
+      Grabadora de Voz
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Traductor de Voz</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Graba tu voz y tradúcela a otros idiomas al instante.</p>
+        
+        <ion-item>
+          <ion-label position="stacked">Idioma Destino</ion-label>
+          <ion-select [(ngModel)]="selectedLanguage" interface="popover">
+            <ion-select-option *ngFor="let lang of supportedLanguages" [value]="lang.code">
+              {{ lang.name }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+    <div class="recording-section">
+      <ion-button 
+        class="record-btn" 
+        shape="round" 
+        [color]="isRecording ? 'danger' : 'primary'" 
+        (click)="toggleRecording()"
+        [disabled]="isProcessing">
+        <ion-icon [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
+      </ion-button>
+
+      <p class="status-message">{{ statusMessage }}</p>
+
+      <div *ngIf="isProcessing" class="processing">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Procesando audio...</p>
+      </div>
+
+      <div *ngIf="recordingTime > 0" class="timer">
+        <ion-chip color="primary">
+          <ion-icon name="time"></ion-icon>
+          <ion-label>{{ formatTime(recordingTime) }}</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+
+    <div *ngIf="originalText" class="results-section">
+      <ion-card class="result-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="text" class="ion-margin-end"></ion-icon>
+            Texto Original
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="text-content">{{ originalText }}</p>
+          <ion-button expand="block" fill="clear" (click)="copyText(originalText)">
+            <ion-icon name="copy" slot="start"></ion-icon>
+            Copiar Texto
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="result-card">
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="language" class="ion-margin-end"></ion-icon>
+            Texto Traducido
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="text-content">{{ translatedText }}</p>
+          <ion-button expand="block" fill="clear" (click)="copyText(translatedText)">
+            <ion-icon name="copy" slot="start"></ion-icon>
+            Copiar Traducción
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button expand="block" (click)="clearResults()">
+        <ion-icon name="trash" slot="start"></ion-icon>
+        Limpiar Resultados
+      </ion-button>
+    </div>
+  </div>
 </ion-content>
