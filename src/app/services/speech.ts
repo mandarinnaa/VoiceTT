@@ -7,7 +7,7 @@ import { VoiceRecorder, RecordingData } from 'capacitor-voice-recorder';
   providedIn: 'root'
 })
 export class SpeechService {
-  private apiKey = 'AIzaSyAIz1AtvAVZqkJvwY1KFt4xN-jMFsVgdrQ';
+  private apiKey = '';
   private speechToTextUrl = 'https://speech.googleapis.com/v1/speech:recognize';
   private translateUrl = 'https://translation.googleapis.com/language/translate/v2';
 
