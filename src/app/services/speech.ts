@@ -7,7 +7,7 @@ import { VoiceRecorder, RecordingData } from 'capacitor-voice-recorder';
   providedIn: 'root'
 })
 export class SpeechService {
-  private apiKey = 'https://39938732469-ocv6q14j2etlnsr9116t7oeoo085m8p3.apps.googleusercontent.com'; 
+  private apiKey = 'AIzaSyAIz1AtvAVZqkJvwY1KFt4xN-jMFsVgdrQ';
   private speechToTextUrl = 'https://speech.googleapis.com/v1/speech:recognize';
   private translateUrl = 'https://translation.googleapis.com/language/translate/v2';
 
@@ -17,9 +17,13 @@ export class SpeechService {
 
   private async initVoiceRecorder() {
     try {
-      await VoiceRecorder.requestAudioRecordingPermission();
+      const { value } = await VoiceRecorder.requestAudioRecordingPermission();
+      if (!value) {
+        throw new Error('Permisos de micrófono no concedidos');
+      }
     } catch (error) {
-      console.error('Error initializing voice recorder:', error);
+      console.error('Error inicializando grabadora:', error);
+      throw error;
     }
   }
 
@@ -33,7 +37,7 @@ export class SpeechService {
       await VoiceRecorder.startRecording();
       return true;
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('Error iniciando grabación:', error);
       throw error;
     }
   }
@@ -43,40 +47,47 @@ export class SpeechService {
       const recordingResult: RecordingData = await VoiceRecorder.stopRecording();
       
       if (recordingResult.value && recordingResult.value.recordDataBase64) {
-        const audioBlob = this.base64ToBlob(recordingResult.value.recordDataBase64, 'audio/wav');
+        const audioBlob = this.base64ToBlob(
+          recordingResult.value.recordDataBase64, 
+          'audio/wav'
+        );
         return audioBlob;
       }
-      throw new Error('No se encontraron datos de grabación');
+      throw new Error('No se capturó audio en la grabación');
     } catch (error) {
-      console.error('Error stopping recording:', error);
+      console.error('Error deteniendo grabación:', error);
       throw error;
     }
   }
 
   private base64ToBlob(base64: string, mimeType: string): Blob {
-    const byteCharacters = atob(base64);
-    const byteArrays = [];
-    
-    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-      const slice = byteCharacters.slice(offset, offset + 512);
-      const byteNumbers = new Array(slice.length);
+    try {
+      const byteCharacters = atob(base64);
+      const byteArrays = [];
       
-      for (let i = 0; i < slice.length; i++) {
-        byteNumbers[i] = slice.charCodeAt(i);
+      for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
       }
       
-      const byteArray = new Uint8Array(byteNumbers);
-      byteArrays.push(byteArray);
+      return new Blob(byteArrays, { type: mimeType });
+    } catch (error) {
+      console.error('Error convirtiendo base64 a Blob:', error);
+      throw new Error('Error procesando el audio grabado');
     }
-    
-    return new Blob(byteArrays, { type: mimeType });
   }
 
   async speechToText(audioBlob: Blob, languageCode: string = 'es-ES'): Promise<string> {
     try {
-      await this.delay(2000); 
+      console.log('Enviando audio a Google Speech-to-Text...');
       
-   
       const audioBase64 = await this.blobToBase64(audioBlob);
       
       const requestBody = {
@@ -84,7 +95,8 @@ export class SpeechService {
           encoding: 'LINEAR16',
           sampleRateHertz: 44100,
           languageCode: languageCode,
-          maxAlternatives: 1
+          model: 'default',
+          enableAutomaticPunctuation: true
         },
         audio: {
           content: audioBase64.split(',')[1]
@@ -92,28 +104,35 @@ export class SpeechService {
       };
 
       const headers = new HttpHeaders({
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': this.apiKey
+        'Content-Type': 'application/json'
       });
 
-      const response: any = await this.http.post(`${this.speechToTextUrl}?key=${this.apiKey}`, requestBody, { headers }).toPromise();
+      const url = `${this.speechToTextUrl}?key=${this.apiKey}`;
+      console.log('📡 Enviando solicitud a:', url);
       
-      if (response.results && response.results.length > 0) {
-        return response.results[0].alternatives[0].transcript;
+      const response: any = await this.http.post(url, requestBody, { headers }).toPromise();
+      
+      if (response.results && response.results.length > 0 && response.results[0].alternatives[0].transcript) {
+        const transcript = response.results[0].alternatives[0].transcript;
+        console.log('Transcripción exitosa:', transcript);
+        return transcript;
       } else {
-        throw new Error('No se encontraron resultados de transcripción');
+        console.warn(' No se encontraron resultados de transcripción:', response);
+        throw new Error('No se pudo transcribir el audio');
       }
-    
-    } catch (error) {
-      console.error('Error en speech to text:', error);
-      throw new Error('Error al transcribir el audio');
+    } catch (error: any) { 
+      console.error('❌ Error en speech to text:', error);
+      if (error.error) {
+        console.error('Detalles del error:', error.error);
+      }
+      throw new Error('Error al transcribir el audio. Verifica tu API key');
     }
   }
 
   async translateText(text: string, targetLanguage: string = 'en'): Promise<string> {
     try {
-      await this.delay(1500); 
-    
+      console.log(' Traduciendo texto a', targetLanguage);
+      
       const requestBody = {
         q: text,
         target: targetLanguage,
@@ -121,20 +140,21 @@ export class SpeechService {
       };
 
       const headers = new HttpHeaders({
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': this.apiKey
+        'Content-Type': 'application/json'
       });
 
-      const response: any = await this.http.post(`${this.translateUrl}?key=${this.apiKey}`, requestBody, { headers }).toPromise();
+      const url = `${this.translateUrl}?key=${this.apiKey}`;
+      const response: any = await this.http.post(url, requestBody, { headers }).toPromise();
       
       if (response.data && response.data.translations.length > 0) {
-        return response.data.translations[0].translatedText;
+        const translation = response.data.translations[0].translatedText;
+        console.log(' Traducción exitosa:', translation);
+        return translation;
       } else {
         throw new Error('No se encontraron resultados de traducción');
       }
-    
-    } catch (error) {
-      console.error('Error en traducción:', error);
+    } catch (error: any) { 
+      console.error('❌ Error en traducción:', error);
       throw new Error('Error al traducir el texto');
     }
   }
@@ -148,16 +168,14 @@ export class SpeechService {
     });
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
   async getSupportedLanguages(): Promise<any[]> {
     return [
       { code: 'en', name: 'English', emoji: '🇺🇸' },
       { code: 'es', name: 'Español', emoji: '🇪🇸' },
       { code: 'fr', name: 'Français', emoji: '🇫🇷' },
       { code: 'pt', name: 'Português', emoji: '🇵🇹' },
+      { code: 'de', name: 'Deutsch', emoji: '🇩🇪' },
+      { code: 'it', name: 'Italiano', emoji: '🇮🇹' }
     ];
   }
 
@@ -181,7 +199,7 @@ export class SpeechService {
         value: JSON.stringify(history) 
       });
     } catch (error) {
-      console.error('Error saving to history:', error);
+      console.error('Error guardando en historial:', error);
     }
   }
 
@@ -190,7 +208,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'translationHistory' });
       return value ? JSON.parse(value) : [];
     } catch (error) {
-      console.error('Error getting history:', error);
+      console.error('Error obteniendo historial:', error);
       return [];
     }
   }
@@ -199,7 +217,7 @@ export class SpeechService {
     try {
       await Preferences.remove({ key: 'translationHistory' });
     } catch (error) {
-      console.error('Error clearing history:', error);
+      console.error('Error limpiando historial:', error);
     }
   }
 
@@ -210,7 +228,7 @@ export class SpeechService {
         value: languageCode 
       });
     } catch (error) {
-      console.error('Error saving language preference:', error);
+      console.error('Error guardando preferencia de idioma:', error);
     }
   }
 
@@ -219,7 +237,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'selectedLanguage' });
       return value;
     } catch (error) {
-      console.error('Error getting saved language:', error);
+      console.error('Error obteniendo idioma guardado:', error);
       return null;
     }
   }

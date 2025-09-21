@@ -21,7 +21,6 @@ import {
 })
 export class AppComponent {
   constructor() {
-    // Registrar todos los iconos que uses en la aplicación
     addIcons({
       mic,
       time, 
