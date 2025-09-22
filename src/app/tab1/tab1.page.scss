@@ -17,6 +17,7 @@
   height: 80px;
   width: 80px;
   margin: 20px auto;
+
   ion-icon {
     font-size: 24px;
   }
@@ -34,7 +35,7 @@
   
   ion-spinner {
     margin-bottom: 10px;
-    --color: var(--ion-color-primary);
+    --color: var(--ion-color-pastel);
   }
   
   p {
@@ -60,17 +61,18 @@
     line-height: 1.6;
     font-size: 16px;
     padding: 10px;
-    background: var(--ion-color-light);
+    background: #ffeef5; 
     border-radius: 8px;
   }
 }
 
 ion-card-header {
-  background: var(--ion-color-light);
+  background: #fce4ec; 
 }
 
 ion-card-title {
   display: flex;
   align-items: center;
   font-size: 18px;
+  color: #ad1457; 
 }

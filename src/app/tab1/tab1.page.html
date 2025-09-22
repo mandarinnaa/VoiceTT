@@ -1,5 +1,5 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar color="pastel">
     <ion-title>
       <ion-icon name="mic" class="ion-margin-end"></ion-icon>
       Grabadora de Voz
@@ -31,7 +31,7 @@
       <ion-button 
         class="record-btn" 
         shape="round" 
-        [color]="isRecording ? 'danger' : 'primary'" 
+        [color]="isRecording ? 'danger' : 'pastel'" 
         (click)="toggleRecording()"
         [disabled]="isProcessing">
         <ion-icon [name]="isRecording ? 'stop' : 'mic'"></ion-icon>
@@ -45,7 +45,7 @@
       </div>
 
       <div *ngIf="recordingTime > 0" class="timer">
-        <ion-chip color="primary">
+        <ion-chip color="pastel">
           <ion-icon name="time"></ion-icon>
           <ion-label>{{ formatTime(recordingTime) }}</ion-label>
         </ion-chip>
@@ -62,7 +62,7 @@
         </ion-card-header>
         <ion-card-content>
           <p class="text-content">{{ originalText }}</p>
-          <ion-button expand="block" fill="clear" (click)="copyText(originalText)">
+          <ion-button expand="block" fill="clear" (click)="copyText(originalText)" color="pastel">
             <ion-icon name="copy" slot="start"></ion-icon>
             Copiar Texto
           </ion-button>
@@ -78,14 +78,14 @@
         </ion-card-header>
         <ion-card-content>
           <p class="text-content">{{ translatedText }}</p>
-          <ion-button expand="block" fill="clear" (click)="copyText(translatedText)">
+          <ion-button expand="block" fill="clear" (click)="copyText(translatedText)" color="pastel">
             <ion-icon name="copy" slot="start"></ion-icon>
             Copiar Traducción
           </ion-button>
         </ion-card-content>
       </ion-card>
 
-      <ion-button expand="block" (click)="clearResults()">
+      <ion-button expand="block" (click)="clearResults()" color="pastel">
         <ion-icon name="trash" slot="start"></ion-icon>
         Limpiar Resultados
       </ion-button>
