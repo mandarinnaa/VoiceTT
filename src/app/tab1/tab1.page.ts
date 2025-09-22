@@ -1,13 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-  IonCardHeader, IonCardTitle, IonCardContent, IonItem,
-  IonLabel, IonSelect, IonSelectOption, IonButton,
-  IonIcon, IonSpinner, IonChip, ToastController
-} from '@ionic/angular/standalone';
-import { HttpClientModule } from '@angular/common/http';
+import { IonHeader, IonToolbar, IonTitle,  IonContent, IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonSelect,IonSelectOption,IonButton,IonIcon,IonSpinner,IonChip,ToastController} from '@ionic/angular/standalone';
 import { SpeechService } from '../services/speech';
 
 @Component({
@@ -15,15 +9,7 @@ import { SpeechService } from '../services/speech';
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    HttpClientModule, // <- IMPORTANTE para HttpClient
-    IonHeader, IonToolbar, IonTitle, IonContent, IonCard,
-    IonCardHeader, IonCardTitle, IonCardContent, IonItem,
-    IonLabel, IonSelect, IonSelectOption, IonButton,
-    IonIcon, IonSpinner, IonChip
-  ]
+  imports: [CommonModule,FormsModule,IonHeader,IonToolbar,IonTitle,IonContent,IonCard,IonCardHeader,IonCardTitle,IonCardContent,IonItem,IonLabel,IonSelect,IonSelectOption, IonButton, IonIcon, IonSpinner, IonChip]
 })
 export class Tab1Page implements OnInit {
   isRecording = false;
@@ -43,6 +29,7 @@ export class Tab1Page implements OnInit {
 
   async ngOnInit() {
     this.supportedLanguages = await this.speechService.getSupportedLanguages();
+    
     const savedLang = await this.speechService.getSavedLanguage();
     if (savedLang) {
       this.selectedLanguage = savedLang;
@@ -62,7 +49,11 @@ export class Tab1Page implements OnInit {
       this.isRecording = true;
       this.statusMessage = "Grabando... Presiona para detener";
       this.recordingTime = 0;
-      this.recordingInterval = setInterval(() => this.recordingTime++, 1000);
+      
+      this.recordingInterval = setInterval(() => {
+        this.recordingTime++;
+      }, 1000);
+
       await this.speechService.startRecording();
     } catch (error) {
       this.statusMessage = "Error al acceder al micrófono";
@@ -73,32 +64,42 @@ export class Tab1Page implements OnInit {
   }
   
   getMicIcon(): string {
-    if (this.isProcessing) {
-      return 'cog-outline';
-    } else if (this.isRecording) {
-      return 'stop';
-    } else {
-      return 'mic';
-    }
+  if (this.isProcessing) {
+    return 'cog-outline';
+  } else if (this.isRecording) {
+    return 'stop';
+  } else {
+    return 'mic';
   }
+}
 
   async stopRecording() {
     this.isRecording = false;
     this.isProcessing = true;
     this.statusMessage = "Procesando audio...";
+    
     clearInterval(this.recordingInterval);
 
     try {
       const audioBlob = await this.speechService.stopRecording();
+      
       if (audioBlob) {
         await this.speechService.saveLanguagePreference(this.selectedLanguage);
+        
         this.originalText = await this.speechService.speechToText(audioBlob);
+        
         this.translatedText = await this.speechService.translateText(
-          this.originalText, this.selectedLanguage
+          this.originalText, 
+          this.selectedLanguage
         );
+        
         await this.speechService.saveToHistory(
-          this.originalText, this.translatedText, 'es', this.selectedLanguage
+          this.originalText, 
+          this.translatedText, 
+          'es', 
+          this.selectedLanguage
         );
+        
         this.statusMessage = "¡Traducción completada!";
         this.showToast("Proceso finalizado con éxito");
       } else {
@@ -110,6 +111,7 @@ export class Tab1Page implements OnInit {
       this.statusMessage = "Error en el procesamiento";
       this.showToast("Error al procesar el audio: " + error.message);
     }
+    
     this.isProcessing = false;
   }
 
@@ -137,7 +139,7 @@ export class Tab1Page implements OnInit {
 
   async showToast(message: string) {
     const toast = await this.toastController.create({
-      message,
+      message: message,
       duration: 2000,
       position: 'bottom'
     });

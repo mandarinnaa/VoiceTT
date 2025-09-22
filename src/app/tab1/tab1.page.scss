@@ -1,78 +1,438 @@
+// Variables de colores pastel
+$pastel-primary: #A8D8EA;    // Azul pastel
+$pastel-secondary: #FFB6B9;  // Rosa pastel
+$pastel-accent: #FFDAC1;     // Melocotón pastel
+$pastel-success: #CAF7E3;    // Verde menta pastel
+$pastel-warning: #FFEAA7;    // Amarillo pastel
+$pastel-light: #F8F5F2;      // Blanco roto
+$pastel-medium: #E6E6E6;     // Gris muy claro
+$pastel-dark: #6D6875;       // Gris lila oscuro
+$pastel-text: #5D5D5D;       // Gris medio para texto
+
+// Mixins para efectos y animaciones
+@mixin card-shadow-pastel {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+@mixin gradient-pastel {
+  background: linear-gradient(135deg, $pastel-primary 0%, $pastel-secondary 100%);
+}
+
+@mixin soft-glow {
+  box-shadow: 0 0 20px rgba(168, 216, 234, 0.3);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pastel-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 182, 185, 0.4);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 15px rgba(255, 182, 185, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 182, 185, 0);
+  }
+}
+
+// Estilos principales
 .container {
-  text-align: center;
-  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f5f2 0%, #f0f7ff 100%);
+  min-height: 100vh;
 }
 
+// Override de colores Ionic con pasteles
+ion-toolbar {
+  --background: linear-gradient(135deg, $pastel-primary 0%, $pastel-secondary 100%);
+  --color: white;
+  
+  ion-title {
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Estilos para las tarjetas
+ion-card {
+  @include card-shadow-pastel;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    animation: float 3s ease-in-out infinite;
+  }
+
+  ion-card-header {
+    background: linear-gradient(135deg, $pastel-primary 0%, lighten($pastel-primary, 10%) 100%);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+
+    ion-card-title {
+      color: $pastel-dark;
+      font-weight: 600;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+
+      ion-icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+        color: $pastel-secondary;
+      }
+    }
+  }
+
+  ion-card-content {
+    padding: 25px;
+    background: rgba(242, 191, 191, 0.7);
+
+    p {
+      color: $pastel-text;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      font-size: 1rem;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+// Estilos para la sección de grabación
 .recording-section {
-  margin: 30px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.record-btn {
-  --border-radius: 50%;
-  --padding-start: 25px;
-  --padding-end: 25px;
-  height: 80px;
-  width: 80px;
-  margin: 20px auto;
-
-  ion-icon {
-    font-size: 24px;
-  }
-}
-
-.status-message {
-  color: var(--ion-color-medium);
-  font-size: 14px;
-  margin: 10px 0;
-}
-
-.processing {
-  margin: 20px auto;
   text-align: center;
-  
-  ion-spinner {
-    margin-bottom: 10px;
-    --color: var(--ion-color-pastel);
+  padding: 50px 30px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 25px;
+  margin: 40px 0;
+  @include card-shadow-pastel;
+  border: 2px dashed rgba(168, 216, 234, 0.3);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid rgba(255, 182, 185, 0.2);
+    border-radius: 20px;
+    pointer-events: none;
   }
-  
-  p {
-    color: var(--ion-color-medium);
-    font-size: 14px;
+
+  .record-btn {
+    width: 100px;
+    height: 100px;
+    --border-radius: 50%;
+    --background: linear-gradient(135deg, $pastel-primary 0%, $pastel-secondary 100%);
+    --box-shadow: 0 8px 25px rgba(168, 216, 234, 0.4);
+    --color: white;
+    margin-bottom: 25px;
+    position: relative;
+    transition: all 0.3s ease;
+
+    ion-icon {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    }
+
+    &.recording {
+      --background: linear-gradient(135deg, $pastel-secondary 0%, lighten($pastel-secondary, 10%) 100%);
+      animation: pastel-pulse 2s infinite;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      transform: none !important;
+      animation: none !important;
+    }
+
+    &:not(:disabled):active {
+      transform: scale(0.95);
+      --box-shadow: 0 4px 15px rgba(168, 216, 234, 0.6);
+    }
+  }
+
+  .status-message {
+    font-size: 1.2rem;
+    color: $pastel-dark;
+    font-weight: 500;
+    margin: 20px 0;
+    min-height: 30px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 12px 20px;
+    border-radius: 15px;
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .processing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: 25px 0;
+
+    ion-spinner {
+      width: 40px;
+      height: 40px;
+      --color: #{$pastel-primary};
+    }
+
+    p {
+      color: $pastel-text;
+      margin: 0;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 8px 16px;
+      border-radius: 12px;
+    }
+  }
+
+  .timer {
+    margin-top: 20px;
+
+    ion-chip {
+      font-size: 1.2rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, $pastel-accent 0%, lighten($pastel-accent, 5%) 100%);
+      color: $pastel-dark;
+
+      ion-icon {
+        margin-right: 10px;
+        color: $pastel-secondary;
+      }
+    }
   }
 }
 
-.timer {
-  margin: 10px 0;
-}
-
+// Estilos para los resultados
 .results-section {
-  margin-top: 30px;
-}
+  margin-top: 40px;
 
-.result-card {
-  margin: 20px 0;
-  text-align: left;
-  
-  .text-content {
-    white-space: pre-wrap;
-    line-height: 1.6;
-    font-size: 16px;
-    padding: 10px;
-    background: #ffeef5; 
-    border-radius: 8px;
+  .result-card {
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.8);
+
+    ion-card-header {
+      background: linear-gradient(135deg, $pastel-success 0%, lighten($pastel-success, 5%) 100%);
+      
+      ion-card-title {
+        color: $pastel-dark;
+        
+        ion-icon {
+          color: $pastel-primary;
+        }
+      }
+    }
+
+    &:last-child ion-card-header {
+      background: linear-gradient(135deg, $pastel-warning 0%, lighten($pastel-warning, 5%) 100%);
+    }
+
+    .text-content {
+      background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+      padding: 20px;
+      border-radius: 15px;
+      border-left: 5px solid $pastel-primary;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: $pastel-text;
+      min-height: 100px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    ion-button {
+      margin-top: 15px;
+      --border-radius: 12px;
+      --background: rgba(255, 255, 255, 0.8);
+      --color: #{$pastel-text};
+      --border-color: #{$pastel-medium};
+
+      ion-icon {
+        font-size: 1.2rem;
+        color: $pastel-primary;
+      }
+
+      &:hover {
+        --background: #{$pastel-primary};
+        --color: white;
+      }
+    }
+  }
+
+  ion-button {
+    margin-top: 20px;
+    --border-radius: 15px;
+    --background: linear-gradient(135deg, $pastel-accent 0%, lighten($pastel-accent, 5%) 100%);
+    --color: #{$pastel-dark};
+    --box-shadow: 0 4px 15px rgba(255, 218, 193, 0.4);
+
+    ion-icon {
+      font-size: 1.2rem;
+      margin-right: 8px;
+    }
   }
 }
 
-ion-card-header {
-  background: #fce4ec; 
+// Estilos para el select de idiomas
+ion-item {
+  --border-radius: 15px;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin: 20px 0;
+  --background: rgba(255, 255, 255, 0.8);
+
+  ion-label {
+    font-weight: 600;
+    color: $pastel-dark;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+  }
+
+  ion-select {
+    --padding-start: 20px;
+    --padding-end: 20px;
+    border: 2px solid $pastel-medium;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    color: $pastel-text;
+    
+    &::part(icon) {
+      color: $pastel-primary;
+    }
+  }
 }
 
-ion-card-title {
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-  color: #ad1457; 
+// Estilos responsivos
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  ion-card {
+    margin-bottom: 20px;
+    border-radius: 18px;
+
+    ion-card-header {
+      padding: 15px;
+
+      ion-card-title {
+        font-size: 1.2rem;
+      }
+    }
+
+    ion-card-content {
+      padding: 20px;
+    }
+  }
+
+  .recording-section {
+    padding: 40px 20px;
+    margin: 30px 0;
+    border-radius: 20px;
+
+    .record-btn {
+      width: 85px;
+      height: 85px;
+
+      ion-icon {
+        font-size: 2.2rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .recording-section {
+    padding: 30px 15px;
+
+    .record-btn {
+      width: 75px;
+      height: 75px;
+
+      ion-icon {
+        font-size: 2rem;
+      }
+    }
+
+    .status-message {
+      font-size: 1.1rem;
+      padding: 10px 15px;
+    }
+  }
+}
+
+// Estados de hover y focus mejorados
+ion-button:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+// Scroll personalizado
+ion-content {
+  --background: linear-gradient(135deg, #f8f5f2 0%, #f0f7ff 50%, #fff5f5 100%);
+  
+  &::part(scroll) {
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: $pastel-primary;
+      border-radius: 10px;
+    }
+  }
 }
