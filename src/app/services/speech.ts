@@ -87,11 +87,10 @@ export class SpeechService {
 
   async speechToText(audioBlob: Blob, languageCode: string = 'es-ES'): Promise<string> {
     try {
-      console.log('📋 Tamaño del audio blob:', audioBlob.size);
-      console.log('📋 Tipo de audio blob:', audioBlob.type);
+      console.log(' Tamaño del audio blob:', audioBlob.size);
+      console.log(' Tipo de audio blob:', audioBlob.type);
       console.log('Enviando audio a Google Speech-to-Text...');
       
-      // Validar que tenemos API key
       if (!this.apiKey) {
         throw new Error('API Key no configurada en environment');
       }
@@ -99,16 +98,17 @@ export class SpeechService {
       const audioBase64 = await this.blobToBase64(audioBlob);
       const base64Content = audioBase64.split(',')[1];
       
-      console.log('📋 Longitud del base64:', base64Content.length);
-      console.log('📋 Primeros 50 caracteres:', base64Content.substring(0, 50));
+      console.log(' Longitud del base64:', base64Content.length);
+      console.log('Primeros 50 caracteres:', base64Content.substring(0, 50));
       
       const requestBody = {
         config: {
-          encoding: 'ENCODING_UNSPECIFIED', // Detección automática
+          encoding: 'FLAC', 
+          sampleRateHertz: 44100, 
           languageCode: languageCode,
           enableAutomaticPunctuation: true,
           useEnhanced: true,
-          model: 'latest_short' // Modelo optimizado para audio corto
+          model: 'latest_short' 
         },
         audio: {
           content: base64Content
@@ -126,19 +126,19 @@ export class SpeechService {
       
       if (response.results && response.results.length > 0 && response.results[0].alternatives[0].transcript) {
         const transcript = response.results[0].alternatives[0].transcript;
-        console.log('✅ Transcripción exitosa:', transcript);
+        console.log(' Transcripción exitosa:', transcript);
         return transcript;
       } else {
-        console.warn('⚠️ No se encontraron resultados de transcripción:', response);
+        console.warn(' No se encontraron resultados de transcripción:', response);
         throw new Error('No se pudo transcribir el audio');
       }
     } catch (error: any) { 
-      console.error('❌ Error en speech to text:', error);
-      console.error('❌ Status:', error.status);
-      console.error('❌ Error response:', JSON.stringify(error.error, null, 2));
+      console.error(' Error en speech to text:', error);
+      console.error('Status:', error.status);
+      console.error(' Error response:', JSON.stringify(error.error, null, 2));
       
       if (error.error && error.error.error) {
-        console.error('❌ Mensaje específico:', error.error.error.message);
+        console.error(' Mensaje específico:', error.error.error.message);
         throw new Error(`Error de API: ${error.error.error.message}`);
       }
       
@@ -148,7 +148,7 @@ export class SpeechService {
 
   async translateText(text: string, targetLanguage: string = 'en'): Promise<string> {
     try {
-      console.log('🌐 Traduciendo texto a', targetLanguage);
+      console.log('Traduciendo texto a', targetLanguage);
       
       if (!this.apiKey) {
         throw new Error('API Key no configurada en environment');
@@ -171,18 +171,18 @@ export class SpeechService {
       
       if (response.data && response.data.translations.length > 0) {
         const translation = response.data.translations[0].translatedText;
-        console.log('✅ Traducción exitosa:', translation);
+        console.log(' Traducción exitosa:', translation);
         return translation;
       } else {
         throw new Error('No se encontraron resultados de traducción');
       }
     } catch (error: any) { 
-      console.error('❌ Error en traducción:', error);
-      console.error('❌ Status:', error.status);
-      console.error('❌ Error response:', JSON.stringify(error.error, null, 2));
+      console.error(' Error en traducción:', error);
+      console.error('Status:', error.status);
+      console.error(' Error response:', JSON.stringify(error.error, null, 2));
       
       if (error.error && error.error.error) {
-        console.error('❌ Mensaje específico:', error.error.error.message);
+        console.error(' Mensaje específico:', error.error.error.message);
         throw new Error(`Error de traducción: ${error.error.error.message}`);
       }
       
@@ -230,9 +230,9 @@ export class SpeechService {
         value: JSON.stringify(history) 
       });
       
-      console.log('✅ Guardado en historial exitosamente');
+      console.log(' Guardado en historial exitosamente');
     } catch (error) {
-      console.error('❌ Error guardando en historial:', error);
+      console.error(' Error guardando en historial:', error);
     }
   }
 
@@ -241,7 +241,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'translationHistory' });
       return value ? JSON.parse(value) : [];
     } catch (error) {
-      console.error('❌ Error obteniendo historial:', error);
+      console.error('Error obteniendo historial:', error);
       return [];
     }
   }
@@ -249,9 +249,9 @@ export class SpeechService {
   async clearHistory(): Promise<void> {
     try {
       await Preferences.remove({ key: 'translationHistory' });
-      console.log('✅ Historial limpiado exitosamente');
+      console.log(' Historial limpiado exitosamente');
     } catch (error) {
-      console.error('❌ Error limpiando historial:', error);
+      console.error(' Error limpiando historial:', error);
     }
   }
 
@@ -261,9 +261,9 @@ export class SpeechService {
         key: 'selectedLanguage', 
         value: languageCode 
       });
-      console.log('✅ Preferencia de idioma guardada:', languageCode);
+      console.log('Preferencia de idioma guardada:', languageCode);
     } catch (error) {
-      console.error('❌ Error guardando preferencia de idioma:', error);
+      console.error(' Error guardando preferencia de idioma:', error);
     }
   }
 
@@ -272,7 +272,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'selectedLanguage' });
       return value;
     } catch (error) {
-      console.error('❌ Error obteniendo idioma guardado:', error);
+      console.error(' Error obteniendo idioma guardado:', error);
       return null;
     }
   }
