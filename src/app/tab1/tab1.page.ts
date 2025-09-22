@@ -62,6 +62,16 @@ export class Tab1Page implements OnInit {
       clearInterval(this.recordingInterval);
     }
   }
+  
+  getMicIcon(): string {
+  if (this.isProcessing) {
+    return 'cog-outline';
+  } else if (this.isRecording) {
+    return 'stop';
+  } else {
+    return 'mic';
+  }
+}
 
   async stopRecording() {
     this.isRecording = false;
