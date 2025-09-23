@@ -20,7 +20,6 @@ export class SpeechService {
     this.initVoiceRecorder();
   }
 
-
   private async initVoiceRecorder() {
     try {
       const { value } = await VoiceRecorder.requestAudioRecordingPermission();
@@ -32,7 +31,6 @@ export class SpeechService {
       throw error;
     }
   }
-  
 
   async startRecording(): Promise<boolean> {
     try {
@@ -54,9 +52,10 @@ export class SpeechService {
       const recordingResult: RecordingData = await VoiceRecorder.stopRecording();
       
       if (recordingResult.value && recordingResult.value.recordDataBase64) {
+        // CAMBIADO: Usar audio/webm en lugar de audio/wav
         const audioBlob = this.base64ToBlob(
           recordingResult.value.recordDataBase64, 
-          'audio/wav'
+          'audio/webm'  // ← Cambio importante aquí
         );
         return audioBlob;
       }
@@ -93,9 +92,9 @@ export class SpeechService {
 
   async speechToText(audioBlob: Blob, languageCode: string = 'es-ES'): Promise<string> {
     try {
-      console.log(' Tamaño del audio blob:', audioBlob.size);
-      console.log(' Tipo de audio blob:', audioBlob.type);
-      console.log('Enviando audio a Google Speech-to-Text...');
+      console.log('📁 Tamaño del audio blob:', audioBlob.size);
+      console.log('🎵 Tipo de audio blob:', audioBlob.type);
+      console.log('📡 Enviando audio a Google Speech-to-Text...');
       
       if (!this.apiKey) {
         throw new Error('API Key no configurada en environment');
@@ -104,17 +103,25 @@ export class SpeechService {
       const audioBase64 = await this.blobToBase64(audioBlob);
       const base64Content = audioBase64.split(',')[1];
       
-      console.log(' Longitud del base64:', base64Content.length);
-      console.log('Primeros 50 caracteres:', base64Content.substring(0, 50));
+      console.log('📏 Longitud del base64:', base64Content.length);
+      console.log('🔤 Primeros 50 caracteres:', base64Content.substring(0, 50));
       
+      // CONFIGURACIÓN CORREGIDA - Esto soluciona el error "bad encoding"
       const requestBody = {
         config: {
-        encoding: 'LINEAR16' as const,
-          sampleRateHertz: 48000, 
+          // CAMBIOS PRINCIPALES:
+          encoding: 'WEBM_OPUS' as const,    // ← Cambio de LINEAR16 a WEBM_OPUS
+          sampleRateHertz: 16000,             // ← Cambio de 48000 a 16000
+          audioChannelCount: 1,               // ← Añadido: especifica mono
           languageCode: languageCode,
           enableAutomaticPunctuation: true,
           useEnhanced: true,
-          model: 'latest_short' 
+          model: 'latest_short',
+          // Configuraciones adicionales para mejor reconocimiento
+          enableWordTimeOffsets: false,
+          enableWordConfidence: true,
+          maxAlternatives: 1,
+          profanityFilter: false
         },
         audio: {
           content: base64Content
@@ -126,35 +133,47 @@ export class SpeechService {
       });
 
       const url = `${this.speechToTextUrl}?key=${this.apiKey}`;
-      console.log('📡 Enviando solicitud a Speech API');
+      console.log('📡 Enviando solicitud a Speech API con configuración corregida');
+      console.log('⚙️ Configuración:', JSON.stringify(requestBody.config, null, 2));
       
       const response: any = await this.http.post(url, requestBody, { headers }).toPromise();
       
       if (response.results && response.results.length > 0 && response.results[0].alternatives[0].transcript) {
         const transcript = response.results[0].alternatives[0].transcript;
-        console.log(' Transcripción exitosa:', transcript);
+        const confidence = response.results[0].alternatives[0].confidence || 0;
+        console.log('✅ Transcripción exitosa:', transcript);
+        console.log('🎯 Confianza:', (confidence * 100).toFixed(1) + '%');
         return transcript;
       } else {
-        console.warn(' No se encontraron resultados de transcripción:', response);
-        throw new Error('No se pudo transcribir el audio');
+        console.warn('⚠️ No se encontraron resultados de transcripción:', response);
+        throw new Error('No se pudo transcribir el audio. Intenta grabar nuevamente con más claridad.');
       }
     } catch (error: any) { 
-      console.error(' Error en speech to text:', error);
-      console.error('Status:', error.status);
-      console.error(' Error response:', JSON.stringify(error.error, null, 2));
+      console.error('❌ Error en speech to text:', error);
+      console.error('📊 Status:', error.status);
+      console.error('🔍 Error response:', JSON.stringify(error.error, null, 2));
       
       if (error.error && error.error.error) {
-        console.error(' Mensaje específico:', error.error.error.message);
-        throw new Error(`Error de API: ${error.error.error.message}`);
+        const errorMessage = error.error.error.message;
+        console.error('💬 Mensaje específico:', errorMessage);
+        
+        // Mensajes de error más específicos
+        if (errorMessage.includes('bad encoding')) {
+          throw new Error('Error de codificación de audio. Verifica que el micrófono funcione correctamente.');
+        } else if (errorMessage.includes('invalid sample rate')) {
+          throw new Error('Error de frecuencia de audio. Reinicia la aplicación e intenta nuevamente.');
+        } else {
+          throw new Error(`Error de API: ${errorMessage}`);
+        }
       }
       
-      throw new Error('Error al transcribir el audio. Verifica la configuración de la API');
+      throw new Error('Error al transcribir el audio. Verifica tu conexión a internet y vuelve a intentar.');
     }
   }
 
   async translateText(text: string, targetLanguage: string = 'en'): Promise<string> {
     try {
-      console.log('Traduciendo texto a', targetLanguage);
+      console.log('🌍 Traduciendo texto a', targetLanguage);
       
       if (!this.apiKey) {
         throw new Error('API Key no configurada en environment');
@@ -177,18 +196,18 @@ export class SpeechService {
       
       if (response.data && response.data.translations.length > 0) {
         const translation = response.data.translations[0].translatedText;
-        console.log(' Traducción exitosa:', translation);
+        console.log('✅ Traducción exitosa:', translation);
         return translation;
       } else {
         throw new Error('No se encontraron resultados de traducción');
       }
     } catch (error: any) { 
-      console.error(' Error en traducción:', error);
-      console.error('Status:', error.status);
-      console.error(' Error response:', JSON.stringify(error.error, null, 2));
+      console.error('❌ Error en traducción:', error);
+      console.error('📊 Status:', error.status);
+      console.error('🔍 Error response:', JSON.stringify(error.error, null, 2));
       
       if (error.error && error.error.error) {
-        console.error(' Mensaje específico:', error.error.error.message);
+        console.error('💬 Mensaje específico:', error.error.error.message);
         throw new Error(`Error de traducción: ${error.error.error.message}`);
       }
       
@@ -236,9 +255,9 @@ export class SpeechService {
         value: JSON.stringify(history) 
       });
       
-      console.log(' Guardado en historial exitosamente');
+      console.log('💾 Guardado en historial exitosamente');
     } catch (error) {
-      console.error(' Error guardando en historial:', error);
+      console.error('❌ Error guardando en historial:', error);
     }
   }
 
@@ -247,7 +266,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'translationHistory' });
       return value ? JSON.parse(value) : [];
     } catch (error) {
-      console.error('Error obteniendo historial:', error);
+      console.error('❌ Error obteniendo historial:', error);
       return [];
     }
   }
@@ -255,9 +274,9 @@ export class SpeechService {
   async clearHistory(): Promise<void> {
     try {
       await Preferences.remove({ key: 'translationHistory' });
-      console.log(' Historial limpiado exitosamente');
+      console.log('🗑️ Historial limpiado exitosamente');
     } catch (error) {
-      console.error(' Error limpiando historial:', error);
+      console.error('❌ Error limpiando historial:', error);
     }
   }
 
@@ -267,9 +286,9 @@ export class SpeechService {
         key: 'selectedLanguage', 
         value: languageCode 
       });
-      console.log('Preferencia de idioma guardada:', languageCode);
+      console.log('💾 Preferencia de idioma guardada:', languageCode);
     } catch (error) {
-      console.error(' Error guardando preferencia de idioma:', error);
+      console.error('❌ Error guardando preferencia de idioma:', error);
     }
   }
 
@@ -278,7 +297,7 @@ export class SpeechService {
       const { value } = await Preferences.get({ key: 'selectedLanguage' });
       return value;
     } catch (error) {
-      console.error(' Error obteniendo idioma guardado:', error);
+      console.error('❌ Error obteniendo idioma guardado:', error);
       return null;
     }
   }
